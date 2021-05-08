@@ -10,10 +10,6 @@ import adafruit_ccs811
 from board import SCL, SDA
 from PIL import Image, ImageDraw, ImageFont
 
-GPIO.setmode(GPIO.BCM)
-GPIO.setup(9, GPIO.IN, pull_up_down=GPIO.PUD_UP)
-GPIO.setup(4, GPIO.OUT)
-
 # 定数
 FONT_1 = ImageFont.truetype("/usr/share/fonts/truetype/fonts-japanese-gothic.ttf", 18, encoding='unic')
 FONT_2 = ImageFont.truetype("/usr/share/fonts/truetype/fonts-japanese-gothic.ttf", 20, encoding='unic')
@@ -22,6 +18,10 @@ DISP_STATE_ECO2 = 0
 DISP_STATE_TEMP = 1
 DISP_STATE_TIME = 2
 DISP_STATE_INFO = 3     # 状態遷移の判定に使用している。状態を追加する場合にはこれより上に挿入すること
+
+LED = 4
+SWITCH = 17
+
 # 変数
 count_on = 0
 count_off = 0
@@ -29,6 +29,11 @@ switch_state = False
 switch_trigger = False
 disp_timer = 0
 disp_state = 0
+
+# GPIOセットアップ
+GPIO.setmode(GPIO.BCM)
+GPIO.setup(SWITCH, GPIO.IN, pull_up_down=GPIO.PUD_UP)
+GPIO.setup(LED, GPIO.OUT)
 
 # I2C インタフェースの生成
 i2c = busio.I2C(SCL, SDA)
@@ -51,7 +56,7 @@ try:
         # スイッチ入力処理
         if switch_state:
             count_on = 0
-            if GPIO.input(9) == 1:          # OFFのとき      
+            if GPIO.input(SWITCH) == 1:          # OFFのとき      
                 count_off = count_off + 1
                 if count_off >= 5:
                     switch_state = False    # OFF判定
@@ -59,7 +64,7 @@ try:
                 count_off = 0
         else:
             count_off = 0
-            if GPIO.input(9) == 0:          # ONのとき
+            if GPIO.input(SWITCH) == 0:          # ONのとき
                 count_on = count_on + 1
                 if count_on == 5:
                     switch_state = True     # ON判定
@@ -71,9 +76,9 @@ try:
 
         # LED点灯処理
         if switch_state:
-            GPIO.output(4, GPIO.HIGH)    
+            GPIO.output(LED, GPIO.HIGH)    
         else:
-            GPIO.output(4, GPIO.LOW)
+            GPIO.output(LED, GPIO.LOW)
 
         # 画面状態遷移
         if switch_trigger:
